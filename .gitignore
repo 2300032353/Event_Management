@@ -1,0 +1,6 @@
+﻿
+
+# Ignore local k8s and CI workflow
+k8s/
+.github/workflows/
+
