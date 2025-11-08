@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-frontend
+  namespace: event-management
+  labels:
+    app: event-frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: event-frontend
+  template:
+    metadata:
+      labels:
+        app: event-frontend
+    spec:
+      containers:
+        - name: frontend
+          # Image set to Docker Hub using your username
+          image: docker.io/2300032353/event-frontend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+---
+# Service for frontend
+apiVersion: v1
+kind: Service
+metadata:
+  name: event-frontend-svc
+  namespace: event-management
+  labels:
+    app: event-frontend
+spec:
+  selector:
+    app: event-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP

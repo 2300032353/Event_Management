@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-backend
+  namespace: event-management
+  labels:
+    app: event-backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: event-backend
+  template:
+    metadata:
+      labels:
+        app: event-backend
+    spec:
+      containers:
+        - name: backend
+          # Image set to Docker Hub using your username
+          image: docker.io/2300032353/event-backend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "prod"
+            # DB and other secrets should be injected via Kubernetes Secret
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+---
+# Service for backend
+apiVersion: v1
+kind: Service
+metadata:
+  name: event-backend-svc
+  namespace: event-management
+  labels:
+    app: event-backend
+spec:
+  selector:
+    app: event-backend
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
